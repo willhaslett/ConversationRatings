@@ -56,11 +56,13 @@ gui.show()
 subID=gui.data[0]
 partnerID=gui.data[1]
 
-dir= './data/'+str(subID)+'_'+str(partnerID)+'.csv'
-while os.path.exists(dir): #if path exists, remame it to avoid overwriting data
-    print "CHECK SUBJECT NUMBER"
+# Open output file and write header
+output_name = './data/'+str(subID)+'_'+str(partnerID)+'.csv'
+if os.path.exists(output_name): #if path exists, remame it to avoid overwriting data
     newSubID = subID+"000"
-    dir = './data/'+str(newSubID)+'_'+str(partnerID)+'.csv'
+    output_name = './data/'+str(newSubID)+'_'+str(partnerID)+'.csv'
+output_csv = open(output_name, 'w')
+output_csv.write('SubID,PartnerID,Rating,Time\n')
 
 #########################################
 #SETUP: DEFINE WINDOW
@@ -296,8 +298,6 @@ mov.setAutoDraw(True)
 timeAtLastRecord = 0
 TIME_INTERVAL = 0.1 #how frequently to sample / record scale responses
 oldMouseX = 0 #mouse position in x-axis
-ratings = [] #to store continous ratings
-timePerRating = [] #matches ratings with time
 
 start_time = time.time()
 i = 0
@@ -316,13 +316,12 @@ while mov.status != visual.FINISHED:
            
     cur_time = time.time()
     #query and record rating info every 0.1 seconds
-    print cur_time, start_time, i
     if (cur_time - start_time) > (0.1 * i):
         i += 1
-        print "here!"
-        sliderValue = (mouseX - sliderLeftEnd) / (sliderRightEnd - sliderLeftEnd) * 100
-        ratings.append(round(sliderValue,0))
-        timePerRating.append(round(cur_time - start_time,2))
+        sliderValue = round((mouseX - sliderLeftEnd) / (sliderRightEnd - sliderLeftEnd) * 100, 0)
+        output_time = round(cur_time - start_time, 2)
+        output_str = ','.join([subID, partnerID, str(sliderValue), str(output_time)]) + '\n'
+        output_csv.write(output_str)
      
     win.flip() 
 
@@ -337,17 +336,6 @@ numRows = len(ratings)
 subCol = [subID] * numRows
 partnerCol = [partnerID] * numRows
 dataFrame = np.c_[subCol, partnerCol, ratings, timePerRating]
-
-#save ratings
-#will want to do this on the fly eventually
-fmt='%s,%s,%s,%s'
-np.savetxt(
-    dir, 
-    dataFrame, 
-    delimiter=",",
-    fmt=fmt,
-    header="SubID, PartnerID, Rating, Time"
-)
 
 #########################################
 #Alert participants that they are done with the task
@@ -370,6 +358,6 @@ psychopy.event.waitKeys(keyList=['escape'])
 
 #########################################
 #SHUT DOWN
-
+output_csv.close()
 win.close()
 core.quit()
