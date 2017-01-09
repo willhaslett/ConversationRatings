@@ -40,6 +40,8 @@ from numpy import (sin, cos, tan, log, log10, pi, average,
 from numpy.random import random, randint, normal, shuffle
 import psychopy.core
 
+import time
+
 #########################################
 
 # Ensure that relative paths start from the same directory as this script
@@ -297,11 +299,10 @@ oldMouseX = 0 #mouse position in x-axis
 ratings = [] #to store continous ratings
 timePerRating = [] #matches ratings with time
 
-#set clock
-clock = core.Clock()
+start_time = time.time()
+i = 0
 
 while mov.status != visual.FINISHED:
-    timeToRecord = clock.getTime() 
        
     mouseRel=mouse.getRel()
     mouseX=oldMouseX + mouseRel[0]
@@ -312,22 +313,16 @@ while mov.status != visual.FINISHED:
     handle.setPos([mouseX, scaleY])
     handle.draw()
     oldMouseX=mouseX
-    
-    #hacky way to improve timing. account for time it takes to perform above steps.
-    m_t2 = clock.getTime()
-    elapsed2 = m_t2 - timeToRecord
-    timeToRecord = timeToRecord - elapsed2
            
+    cur_time = time.time()
     #query and record rating info every 0.1 seconds
-    if (timeToRecord - timeAtLastRecord) > TIME_INTERVAL:
-     sliderValue = (mouseX - sliderLeftEnd) / (sliderRightEnd - sliderLeftEnd) * 100
-     ratings.append(round(sliderValue,0))
-     timePerRating.append(round(timeToRecord,2))
-     
-     #hacky way to improve timing. account for time it takes to perform above steps.
-     m_t = clock.getTime()
-     elapsed = m_t - timeToRecord
-     timeAtLastRecord = timeToRecord - elapsed
+    print cur_time, start_time, i
+    if (cur_time - start_time) > (0.1 * i):
+        i += 1
+        print "here!"
+        sliderValue = (mouseX - sliderLeftEnd) / (sliderRightEnd - sliderLeftEnd) * 100
+        ratings.append(round(sliderValue,0))
+        timePerRating.append(round(cur_time - start_time,2))
      
     win.flip() 
 
